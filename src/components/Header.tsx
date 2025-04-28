@@ -1,6 +1,6 @@
 
 import { Button } from "@/components/ui/button";
-import { Wallet } from "lucide-react";
+import { Database, Wallet } from "lucide-react";
 import { useState } from "react";
 
 interface HeaderProps {
@@ -40,7 +40,8 @@ const Header = ({ connected, onConnectChange }: HeaderProps) => {
     <header className="header flex items-center justify-between px-6 py-4 fixed top-0 left-0 right-0 z-50">
       <div className="flex items-center space-x-8">
         <div className="flex items-center">
-          <span className="text-xl font-bold bg-gradient-to-r from-blue-400 to-indigo-400 bg-clip-text text-transparent">
+          <Database className="h-5 w-5 mr-2 text-blue-400" />
+          <span className="text-xl font-bold bg-gradient-to-r from-blue-400 via-indigo-400 to-purple-400 bg-clip-text text-transparent">
             Chain<span className="font-extrabold">Data</span>
           </span>
           <span className="ml-2 text-xs px-2 py-0.5 bg-blue-500/20 text-blue-400 rounded-full">

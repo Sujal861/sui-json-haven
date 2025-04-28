@@ -55,6 +55,8 @@ export default {
 				},
 				chaindata: {
 					blue: '#3b82f6',
+					indigo: '#6366f1',
+					purple: '#8b5cf6',
 					teal: '#0d9488',
 					green: '#10b981',
 					red: '#ef4444',
@@ -91,7 +93,15 @@ export default {
 					from: { transform: 'translateX(-10px)', opacity: '0' },
 					to: { transform: 'translateX(0)', opacity: '1' }
 				},
-				pulse: {
+				'glow': {
+					'0%, 100%': { 
+						boxShadow: '0 0 10px rgba(59, 130, 246, 0.5), 0 0 20px rgba(99, 102, 241, 0.3)'
+					},
+					'50%': { 
+						boxShadow: '0 0 15px rgba(59, 130, 246, 0.7), 0 0 30px rgba(99, 102, 241, 0.5)'
+					}
+				},
+				'pulse': {
 					'0%, 100%': { opacity: '1' },
 					'50%': { opacity: '0.5' }
 				}
@@ -102,7 +112,13 @@ export default {
 				'fade-in': 'fade-in 0.2s ease-out',
 				'fade-out': 'fade-out 0.2s ease-out',
 				'slide-in': 'slide-in 0.3s ease-out',
+				'glow': 'glow 2s ease-in-out infinite',
 				'pulse': 'pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite'
+			},
+			boxShadow: {
+				'glow': '0 0 10px rgba(59, 130, 246, 0.5), 0 0 20px rgba(99, 102, 241, 0.3)',
+				'neon': '0 0 5px theme("colors.primary.DEFAULT"), 0 0 20px rgba(59, 130, 246, 0.5)',
+				'inner-glow': 'inset 0 0 10px rgba(59, 130, 246, 0.2)'
 			}
 		}
 	},
