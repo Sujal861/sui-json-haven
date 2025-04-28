@@ -5,35 +5,35 @@
 
 @layer base {
   :root {
-    --background: 217.2 32.6% 17.5%;
+    --background: 220 33% 9%;
     --foreground: 210 40% 98%;
 
-    --card: 222.2 84% 4.9%;
+    --card: 222 47% 11%;
     --card-foreground: 210 40% 98%;
 
-    --popover: 222.2 84% 4.9%;
+    --popover: 222 47% 11%;
     --popover-foreground: 210 40% 98%;
 
-    --primary: 217.2 91.2% 59.8%;
-    --primary-foreground: 222.2 47.4% 11.2%;
+    --primary: 217 91% 60%;
+    --primary-foreground: 222 47% 11%;
 
-    --secondary: 217.2 32.6% 17.5%;
+    --secondary: 217 33% 17%;
     --secondary-foreground: 210 40% 98%;
 
-    --muted: 217.2 32.6% 17.5%;
+    --muted: 217 33% 17%;
     --muted-foreground: 215 20.2% 65.1%;
 
-    --accent: 217.2 32.6% 17.5%;
+    --accent: 217 33% 17%;
     --accent-foreground: 210 40% 98%;
 
-    --destructive: 0 62.8% 30.6%;
+    --destructive: 0 63% 31%;
     --destructive-foreground: 210 40% 98%;
 
-    --border: 217.2 32.6% 17.5%;
-    --input: 217.2 32.6% 17.5%;
-    --ring: 212.7 26.8% 83.9%;
+    --border: 217 33% 17%;
+    --input: 217 33% 17%;
+    --ring: 224 76% 48%;
 
-    --radius: 0.5rem;
+    --radius: 0.75rem;
   }
 }
 
@@ -43,40 +43,60 @@
   }
 
   body {
-    @apply bg-chaindata-dark-blue text-foreground antialiased;
+    @apply bg-gradient-to-br from-[#0A0B0E] to-[#141619] text-foreground antialiased min-h-screen;
   }
 }
 
 @layer components {
+  .header {
+    @apply bg-black/20 backdrop-blur-sm border-b border-white/10;
+  }
+  
   .json-key {
-    @apply text-chaindata-blue;
+    @apply text-blue-400;
   }
+  
   .json-string {
-    @apply text-chaindata-green;
+    @apply text-emerald-400;
   }
+  
   .json-number {
-    @apply text-chaindata-yellow;
+    @apply text-amber-400;
   }
+  
   .json-boolean {
-    @apply text-chaindata-teal;
+    @apply text-cyan-400;
   }
+  
   .json-null {
-    @apply text-chaindata-red;
+    @apply text-red-400;
   }
   
   .editor-container {
-    @apply bg-chaindata-dark rounded-lg border border-gray-700 overflow-hidden;
+    @apply bg-black/40 rounded-xl border border-white/10 overflow-hidden;
+  }
+  
+  .glassmorphism {
+    @apply bg-white/5 backdrop-blur-lg border border-white/10 rounded-xl;
+  }
+  
+  .nav-item {
+    @apply px-4 py-2 text-sm text-gray-400 hover:text-white transition-colors;
+  }
+  
+  .btn-primary {
+    @apply bg-gradient-to-r from-blue-600 to-indigo-600 hover:from-blue-700 hover:to-indigo-700 text-white;
   }
   
   .transaction-pending {
-    @apply animate-pulse text-chaindata-yellow;
+    @apply animate-pulse text-amber-400;
   }
   
   .transaction-success {
-    @apply text-chaindata-green;
+    @apply text-emerald-400;
   }
   
   .transaction-error {
-    @apply text-chaindata-red;
+    @apply text-red-400;
   }
 }
