@@ -1,44 +1,28 @@
-
 import { Button } from "@/components/ui/button";
-import { Wallet, Folder, FileText } from "lucide-react";
+import { FileText } from "lucide-react";
 
 interface EmptyStateProps {
-  title: string;
-  description: string;
-  icon: "wallet" | "folder" | "file-text";
-  action?: {
-    label: string;
-    onClick: () => void;
-  };
+  onCreateStore: () => void;
 }
 
-const EmptyState = ({ title, description, icon, action }: EmptyStateProps) => {
-  const getIcon = () => {
-    switch (icon) {
-      case "wallet":
-        return <Wallet className="w-16 h-16 text-chaindata-blue mb-4" />;
-      case "folder":
-        return <Folder className="w-16 h-16 text-chaindata-blue mb-4" />;
-      case "file-text":
-        return <FileText className="w-16 h-16 text-chaindata-blue mb-4" />;
-    }
-  };
-
+const EmptyState = ({ onCreateStore }: EmptyStateProps) => {
   return (
-    <div className="text-center p-8 animate-fade-in">
-      <div className="flex flex-col items-center">
-        {getIcon()}
-        <h3 className="text-xl font-semibold mb-2">{title}</h3>
-        <p className="text-gray-400 max-w-md mb-6">{description}</p>
-        
-        {action && (
+    <div className="flex-1 flex items-center justify-center">
+      <div className="text-center p-8 animate-fade-in">
+        <div className="flex flex-col items-center">
+          <FileText className="w-16 h-16 text-blue-400 mb-4" />
+          <h3 className="text-xl font-semibold mb-2">No Documents Yet</h3>
+          <p className="text-gray-400 max-w-md mb-6">
+            Create your first document to get started with JSON Haven
+          </p>
+          
           <Button 
-            onClick={action.onClick}
-            className="bg-chaindata-blue hover:bg-chaindata-blue/80"
+            onClick={onCreateStore}
+            className="bg-blue-500 hover:bg-blue-600"
           >
-            {action.label}
+            Create Document
           </Button>
-        )}
+        </div>
       </div>
     </div>
   );

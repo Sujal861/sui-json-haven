@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import Header from '../components/Header';
 import DocumentExplorer from '../components/DocumentExplorer';
@@ -7,199 +6,194 @@ import EmptyState from '../components/EmptyState';
 import DocumentActions from '../components/DocumentActions';
 import CreateStoreModal from '../components/CreateStoreModal';
 import { useToast } from '@/hooks/use-toast';
+import { exampleDocuments } from '@/data/examples';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { CheckCircle2 } from 'lucide-react';
 
-type Document = {
+interface Document {
   id: string;
   key: string;
   content: string;
   lastModified: string;
-};
+}
+
+const FeatureCard = ({ title, description }: { title: string; description: string }) => (
+  <Card className="bg-black/20 border border-white/10">
+    <CardContent className="p-4">
+      <div className="flex items-start space-x-3">
+        <CheckCircle2 className="w-5 h-5 text-green-500 mt-1" />
+        <div>
+          <h3 className="font-semibold text-white">{title}</h3>
+          <p className="text-gray-400 text-sm mt-1">{description}</p>
+        </div>
+      </div>
+    </CardContent>
+  </Card>
+);
 
 const Index = () => {
-  const [connected, setConnected] = useState<boolean>(false);
-  const [storeCreated, setStoreCreated] = useState<boolean>(false);
-  const [showCreateStoreModal, setShowCreateStoreModal] = useState<boolean>(false);
   const [documents, setDocuments] = useState<Document[]>([]);
   const [selectedDocument, setSelectedDocument] = useState<Document | null>(null);
-  const [jsonContent, setJsonContent] = useState<string>('{\n  \n}');
-  const [isProcessing, setIsProcessing] = useState<boolean>(false);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
   const { toast } = useToast();
 
-  const handleConnect = (status: boolean) => {
-    setConnected(status);
-    if (status) {
-      // For demo purposes, we'll check if a store exists
-      // In a real app, we'd query the blockchain here
-      setTimeout(() => {
-        setStoreCreated(false);
-        setShowCreateStoreModal(true);
-      }, 1000);
-    }
+  const handleCreateStore = () => {
+    setIsCreateModalOpen(true);
   };
 
-  const handleCreateStore = () => {
-    setIsProcessing(true);
-    // Simulate blockchain transaction
-    setTimeout(() => {
-      setStoreCreated(true);
-      setShowCreateStoreModal(false);
-      setIsProcessing(false);
-      toast({
-        title: "Store created successfully",
-        description: "Your ChainData store is ready to use",
-      });
-    }, 2000);
+  const handleLoadExamples = () => {
+    setDocuments(exampleDocuments);
+    setSelectedDocument(exampleDocuments[0]);
+    toast({
+      title: "Examples Loaded",
+      description: "Example documents have been loaded successfully.",
+    });
   };
 
   const handleAddDocument = (key: string) => {
-    setIsProcessing(true);
-    // Simulate adding document to blockchain
-    setTimeout(() => {
-      const newDoc = {
-        id: `doc-${Math.random().toString(36).substr(2, 9)}`,
-        key,
-        content: jsonContent,
-        lastModified: new Date().toISOString()
-      };
-      
-      setDocuments(prev => [...prev, newDoc]);
-      setSelectedDocument(newDoc);
-      setIsProcessing(false);
-      
-      toast({
-        title: "Document added",
-        description: `Document '${key}' has been added to your store`,
-      });
-    }, 1500);
+    const newDoc: Document = {
+      id: Math.random().toString(36).substr(2, 9),
+      key,
+      content: '{\n  \n}',
+      lastModified: new Date().toISOString()
+    };
+    setDocuments([...documents, newDoc]);
+    setSelectedDocument(newDoc);
+    toast({
+      title: "Success",
+      description: "Document created successfully",
+    });
   };
 
   const handleUpdateDocument = () => {
     if (!selectedDocument) return;
     
-    setIsProcessing(true);
-    // Simulate updating document on blockchain
-    setTimeout(() => {
-      const updatedDocs = documents.map(doc => {
-        if (doc.id === selectedDocument.id) {
-          return {
-            ...doc,
-            content: jsonContent,
-            lastModified: new Date().toISOString()
-          };
-        }
-        return doc;
-      });
-      
-      const updatedDoc = updatedDocs.find(doc => doc.id === selectedDocument.id);
-      setDocuments(updatedDocs);
-      setSelectedDocument(updatedDoc || null);
-      setIsProcessing(false);
-      
-      toast({
-        title: "Document updated",
-        description: `Document '${selectedDocument.key}' has been updated`,
-      });
-    }, 1500);
+    const updatedDocuments = documents.map(doc =>
+      doc.id === selectedDocument.id ? selectedDocument : doc
+    );
+    setDocuments(updatedDocuments);
+    toast({
+      title: "Success",
+      description: "Document updated successfully",
+    });
   };
 
   const handleDeleteDocument = () => {
     if (!selectedDocument) return;
     
-    setIsProcessing(true);
-    // Simulate deleting document from blockchain
-    setTimeout(() => {
-      const updatedDocs = documents.filter(doc => doc.id !== selectedDocument.id);
-      setDocuments(updatedDocs);
-      setSelectedDocument(null);
-      setJsonContent('{\n  \n}');
-      setIsProcessing(false);
-      
-      toast({
-        title: "Document deleted",
-        description: `Document '${selectedDocument.key}' has been deleted`,
-      });
-    }, 1500);
+    const updatedDocuments = documents.filter(doc => doc.id !== selectedDocument.id);
+    setDocuments(updatedDocuments);
+    setSelectedDocument(null);
+    toast({
+      title: "Success",
+      description: "Document deleted successfully",
+    });
   };
-  
+
   const selectDocument = (document: Document) => {
     setSelectedDocument(document);
-    setJsonContent(document.content);
   };
 
   return (
-    <div className="min-h-screen flex flex-col bg-chaindata-dark-blue">
-      <Header connected={connected} onConnectChange={handleConnect} />
+    <div className="min-h-screen bg-gradient-to-br from-[#0A0B0E] to-[#141619]">
+      <Header />
       
-      <CreateStoreModal 
-        isOpen={showCreateStoreModal} 
-        onClose={() => setShowCreateStoreModal(false)}
-        onCreate={handleCreateStore}
-        isProcessing={isProcessing}
-      />
-      
-      {!connected ? (
-        <div className="flex-1 flex items-center justify-center">
-          <EmptyState 
-            title="Connect Your Wallet" 
-            description="Connect your Sui wallet to get started with ChainData" 
-            icon="wallet"
-          />
-        </div>
-      ) : !storeCreated ? (
-        <div className="flex-1 flex items-center justify-center">
-          <EmptyState 
-            title="Create a Store" 
-            description="You need to create a ChainData store to begin" 
-            icon="folder"
-            action={{
-              label: "Create Store",
-              onClick: () => setShowCreateStoreModal(true)
-            }}
-          />
-        </div>
-      ) : (
-        <div className="flex-1 flex overflow-hidden">
-          <DocumentExplorer 
-            documents={documents}
-            selectedDocument={selectedDocument}
-            onSelectDocument={selectDocument}
-            onCreateDocument={() => {
-              setSelectedDocument(null);
-              setJsonContent('{\n  \n}');
-            }}
-          />
-          
-          <div className="flex-1 flex flex-col p-4 overflow-hidden">
-            {selectedDocument || documents.length === 0 ? (
-              <>
-                <DocumentActions 
-                  document={selectedDocument} 
-                  onAdd={handleAddDocument}
-                  onUpdate={handleUpdateDocument}
-                  onDelete={handleDeleteDocument}
-                  isProcessing={isProcessing}
+      <main className="container mx-auto px-4 pt-20">
+        {documents.length === 0 ? (
+          <div className="space-y-12">
+            {/* Hero Section */}
+            <div className="text-center space-y-4">
+              <h1 className="text-4xl font-bold text-white">
+                JSON Editor & Management
+              </h1>
+              <p className="text-xl text-gray-400 max-w-2xl mx-auto">
+                A powerful, user-friendly JSON editor with syntax highlighting, validation, and management features.
+              </p>
+            </div>
+
+            {/* Getting Started Section */}
+            <div className="text-center space-y-4">
+              <div className="flex flex-col items-center justify-center space-y-4">
+                <EmptyState onCreateStore={handleCreateStore} />
+                <Button
+                  variant="outline"
+                  onClick={handleLoadExamples}
+                  className="mt-4"
+                >
+                  Load Example Documents
+                </Button>
+              </div>
+            </div>
+
+            {/* Features Section */}
+            <div className="space-y-6">
+              <h2 className="text-2xl font-semibold text-white text-center">Features</h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <FeatureCard
+                  title="JSON Document Management"
+                  description="Create, edit, and manage JSON documents with custom keys and names. Delete documents when no longer needed."
                 />
-                
-                <div className="mt-4 flex-1 overflow-hidden">
-                  <JsonEditor 
-                    value={jsonContent} 
-                    onChange={setJsonContent}
-                    readOnly={isProcessing}
-                  />
-                </div>
-              </>
-            ) : (
-              <div className="flex-1 flex items-center justify-center">
-                <EmptyState 
-                  title="Select a Document" 
-                  description="Select a document from the sidebar or create a new one" 
-                  icon="file-text"
+                <FeatureCard
+                  title="Modern Interface"
+                  description="Dark-themed interface with split-screen layout. Document explorer on the left, JSON editor on the right."
+                />
+                <FeatureCard
+                  title="Advanced Editor"
+                  description="Real-time JSON validation, syntax highlighting, auto-formatting, and error detection."
+                />
+                <FeatureCard
+                  title="Example Templates"
+                  description="Pre-built templates for user profiles, product catalogs, and API configurations."
+                />
+                <FeatureCard
+                  title="User Experience"
+                  description="Toast notifications, empty state handling, and intuitive document navigation."
+                />
+                <FeatureCard
+                  title="Technical Features"
+                  description="Built with React and TypeScript. Modern UI components and robust state management."
                 />
               </div>
-            )}
+            </div>
           </div>
-        </div>
-      )}
+        ) : (
+          <div className="grid grid-cols-12 gap-6">
+            <div className="col-span-3">
+              <DocumentExplorer
+                documents={documents}
+                selectedDocument={selectedDocument}
+                onSelectDocument={selectDocument}
+                onAddDocument={handleCreateStore}
+              />
+            </div>
+            
+            <div className="col-span-9">
+              {selectedDocument && (
+                <>
+                  <DocumentActions
+                    document={selectedDocument}
+                    onUpdate={handleUpdateDocument}
+                    onDelete={handleDeleteDocument}
+                  />
+                  <JsonEditor
+                    value={selectedDocument.content}
+                    onChange={(content) =>
+                      setSelectedDocument({ ...selectedDocument, content })
+                    }
+                  />
+                </>
+              )}
+            </div>
+          </div>
+        )}
+      </main>
+
+      <CreateStoreModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onAddDocument={handleAddDocument}
+      />
     </div>
   );
 };

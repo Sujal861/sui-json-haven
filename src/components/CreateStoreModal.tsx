@@ -1,56 +1,52 @@
-
 import { useState } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogDescription, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Loader } from "lucide-react";
 
 interface CreateStoreModalProps {
   isOpen: boolean;
   onClose: () => void;
-  onCreate: () => void;
-  isProcessing: boolean;
+  onAddDocument: (key: string) => void;
 }
 
 const CreateStoreModal = ({ 
   isOpen, 
   onClose, 
-  onCreate, 
-  isProcessing 
+  onAddDocument
 }: CreateStoreModalProps) => {
-  const [storeName, setStoreName] = useState("MyDocumentStore");
+  const [documentKey, setDocumentKey] = useState("");
 
   const handleCreate = () => {
-    if (storeName.trim()) {
-      onCreate();
+    if (documentKey.trim()) {
+      onAddDocument(documentKey);
+      setDocumentKey("");
+      onClose();
     }
   };
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
-      <DialogContent className="bg-chaindata-dark-blue border-gray-800">
+      <DialogContent className="bg-[#0A0B0E] border-gray-800">
         <DialogHeader>
-          <DialogTitle className="text-xl text-white">Create ChainData Store</DialogTitle>
+          <DialogTitle className="text-xl text-white">Create New Document</DialogTitle>
           <DialogDescription>
-            Create a new on-chain JSON document store using Sui Walrus storage primitives.
+            Create a new JSON document in your workspace.
           </DialogDescription>
         </DialogHeader>
         
         <div className="py-4">
-          <Label htmlFor="storeName" className="text-white">Store name</Label>
+          <Label htmlFor="documentKey" className="text-white">Document Key</Label>
           <Input 
-            id="storeName"
-            value={storeName}
-            onChange={(e) => setStoreName(e.target.value)} 
-            placeholder="Enter store name"
-            className="mt-1 bg-chaindata-dark border-gray-700"
-            disabled={isProcessing}
+            id="documentKey"
+            value={documentKey}
+            onChange={(e) => setDocumentKey(e.target.value)} 
+            placeholder="Enter document key"
+            className="mt-1 bg-[#141619] border-gray-700"
           />
           
-          <p className="mt-4 text-sm text-muted-foreground">
-            This will create a new document store on the Sui blockchain using Walrus storage primitives.
-            All your JSON documents will be stored on-chain.
+          <p className="mt-4 text-sm text-gray-400">
+            The document key will be used to identify your JSON document in the workspace.
           </p>
         </div>
         
@@ -59,23 +55,15 @@ const CreateStoreModal = ({
             variant="outline" 
             onClick={onClose}
             className="border-gray-700 text-white"
-            disabled={isProcessing}
           >
             Cancel
           </Button>
           <Button 
             onClick={handleCreate}
-            className="bg-chaindata-blue hover:bg-chaindata-blue/80"
-            disabled={isProcessing || !storeName.trim()}
+            className="bg-blue-500 hover:bg-blue-600"
+            disabled={!documentKey.trim()}
           >
-            {isProcessing ? (
-              <>
-                <Loader className="mr-2 h-4 w-4 animate-spin" />
-                Creating...
-              </>
-            ) : (
-              "Create Store"
-            )}
+            Create Document
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -14,7 +14,7 @@ const JsonEditor = ({ value, onChange, readOnly = false }: JsonEditorProps) => {
   useEffect(() => {
     try {
       // If empty, provide default template
-      if (!value.trim()) {
+      if (!value || !value.trim()) {
         setFormattedValue('{\n  \n}');
         setError(null);
         return;
@@ -38,6 +38,7 @@ const JsonEditor = ({ value, onChange, readOnly = false }: JsonEditorProps) => {
 
   const handleChange = (e: React.ChangeEvent<HTMLTextAreaElement>) => {
     const newValue = e.target.value;
+    setFormattedValue(newValue);
     onChange(newValue);
   };
 
@@ -45,6 +46,11 @@ const JsonEditor = ({ value, onChange, readOnly = false }: JsonEditorProps) => {
     // For a simple highlighting approach since this is a prototype
     // In a real app, we would use a proper syntax highlighting library
     try {
+      // If empty, provide default template
+      if (!json || !json.trim()) {
+        return <div className="font-mono whitespace-pre">{'{'}\n  \n{'}'}</div>;
+      }
+      
       const parsed = JSON.parse(json);
       const formatted = JSON.stringify(parsed, null, 2);
       
