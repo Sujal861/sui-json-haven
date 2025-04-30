@@ -1,25 +1,62 @@
 
-import { Wallet, Link, LayoutDashboard, Settings, Menu, X } from "lucide-react";
+import { useState, useEffect } from "react";
+import { Wallet, LayoutDashboard, Settings, Menu, X, ClipboardPaste } from "lucide-react";
 import { Link as RouterLink } from "react-router-dom";
 import { Button } from "@/components/ui/button";
-import { useState } from "react";
-import { useChainData } from "@/hooks/useChainData";
 import { toast } from "sonner";
 import WalletDisplay from "./WalletDisplay";
+import { useWallet } from "@/providers/WalletProvider";
+import { Dialog, DialogContent, DialogDescription, DialogFooter, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
 
 const Header = () => {
   const [isMenuOpen, setIsMenuOpen] = useState(false);
-  const { isConnected, connectWallet, disconnectWallet, walletAddress } = useChainData();
+  const [showManualInput, setShowManualInput] = useState(false);
+  const [manualAddress, setManualAddress] = useState("");
+  const { isConnected, connectWallet, disconnectWallet, walletAddress, manualConnectWallet } = useWallet();
 
   const toggleMenu = () => setIsMenuOpen(!isMenuOpen);
 
   const handleConnectWallet = async () => {
     const address = await connectWallet();
-    if (address) {
-      toast.success("Address copied to clipboard", { 
-        duration: 2000 
+    if (!address) {
+      // If connection fails, show the manual input option after a timeout
+      setTimeout(() => {
+        setShowManualInput(true);
+      }, 1500);
+    }
+  };
+
+  const handleManualConnect = () => {
+    manualConnectWallet(manualAddress);
+    setShowManualInput(false);
+    setManualAddress("");
+  };
+
+  useEffect(() => {
+    const handlePasteEvent = (event: Event) => {
+      const customEvent = event as CustomEvent;
+      if (customEvent.detail && customEvent.detail.address) {
+        setManualAddress(customEvent.detail.address);
+        setShowManualInput(true);
+      }
+    };
+
+    document.addEventListener('wallet-address-paste', handlePasteEvent);
+    return () => {
+      document.removeEventListener('wallet-address-paste', handlePasteEvent);
+    };
+  }, []);
+
+  const handlePasteAddress = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      setManualAddress(text);
+    } catch (error) {
+      console.error("Error pasting from clipboard:", error);
+      toast.error("Clipboard access denied", {
+        description: "Please paste the address manually"
       });
-      navigator.clipboard.writeText(address);
     }
   };
 
@@ -48,14 +85,50 @@ const Header = () => {
       
       <div className="hidden md:flex items-center space-x-4">
         {!isConnected ? (
-          <Button 
-            onClick={handleConnectWallet}
-            className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600"
-            size="sm"
-          >
-            <Wallet className="mr-2 h-4 w-4" />
-            Connect Wallet
-          </Button>
+          <div className="flex items-center space-x-2">
+            <Button 
+              onClick={handleConnectWallet}
+              className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600"
+              size="sm"
+            >
+              <Wallet className="mr-2 h-4 w-4" />
+              Connect Wallet
+            </Button>
+            
+            <Dialog open={showManualInput} onOpenChange={setShowManualInput}>
+              <DialogContent className="sm:max-w-md">
+                <DialogHeader>
+                  <DialogTitle>Enter Wallet Address</DialogTitle>
+                  <DialogDescription>
+                    Paste your Sui wallet address below to connect manually.
+                  </DialogDescription>
+                </DialogHeader>
+                <div className="flex items-center space-x-2">
+                  <div className="grid flex-1 gap-2">
+                    <Input
+                      value={manualAddress}
+                      onChange={(e) => setManualAddress(e.target.value)}
+                      placeholder="0x..."
+                      className="font-mono text-xs"
+                    />
+                  </div>
+                  <Button size="icon" variant="outline" onClick={handlePasteAddress}>
+                    <ClipboardPaste className="h-4 w-4" />
+                  </Button>
+                </div>
+                <DialogFooter className="sm:justify-end">
+                  <Button 
+                    type="button" 
+                    onClick={handleManualConnect} 
+                    disabled={!manualAddress}
+                    className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600"
+                  >
+                    Connect
+                  </Button>
+                </DialogFooter>
+              </DialogContent>
+            </Dialog>
+          </div>
         ) : (
           <div className="flex items-center space-x-3">
             <WalletDisplay walletAddress={walletAddress} />
@@ -112,16 +185,30 @@ const Header = () => {
             </RouterLink>
             
             {!isConnected ? (
-              <Button 
-                onClick={() => {
-                  handleConnectWallet();
-                  setIsMenuOpen(false);
-                }} 
-                className="w-full mt-2"
-              >
-                <Wallet className="mr-2 h-4 w-4" />
-                Connect Wallet
-              </Button>
+              <div className="flex flex-col space-y-3 pt-2">
+                <Button 
+                  onClick={() => {
+                    handleConnectWallet();
+                    setIsMenuOpen(false);
+                  }} 
+                  className="w-full"
+                >
+                  <Wallet className="mr-2 h-4 w-4" />
+                  Connect Wallet
+                </Button>
+                
+                <Button 
+                  variant="outline"
+                  onClick={() => {
+                    setShowManualInput(true);
+                    setIsMenuOpen(false);
+                  }} 
+                  className="w-full"
+                >
+                  <ClipboardPaste className="mr-2 h-4 w-4" />
+                  Paste Wallet Address
+                </Button>
+              </div>
             ) : (
               <div className="flex flex-col space-y-3 pt-2">
                 <WalletDisplay walletAddress={walletAddress} />
@@ -140,6 +227,40 @@ const Header = () => {
           </nav>
         </div>
       )}
+
+      <Dialog open={showManualInput} onOpenChange={setShowManualInput}>
+        <DialogContent className="sm:max-w-md">
+          <DialogHeader>
+            <DialogTitle>Enter Wallet Address</DialogTitle>
+            <DialogDescription>
+              Paste your Sui wallet address below to connect manually.
+            </DialogDescription>
+          </DialogHeader>
+          <div className="flex items-center space-x-2">
+            <div className="grid flex-1 gap-2">
+              <Input
+                value={manualAddress}
+                onChange={(e) => setManualAddress(e.target.value)}
+                placeholder="0x..."
+                className="font-mono text-xs"
+              />
+            </div>
+            <Button size="icon" variant="outline" onClick={handlePasteAddress}>
+              <ClipboardPaste className="h-4 w-4" />
+            </Button>
+          </div>
+          <DialogFooter className="sm:justify-end">
+            <Button 
+              type="button" 
+              onClick={handleManualConnect} 
+              disabled={!manualAddress}
+              className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600"
+            >
+              Connect
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
     </header>
   );
 };

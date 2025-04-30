@@ -1,13 +1,14 @@
 
 import React from 'react';
 import { Button } from "@/components/ui/button";
-import { ExternalLink, Wallet } from "lucide-react";
+import { ExternalLink, Wallet, ClipboardPaste } from "lucide-react";
 import { 
   Tooltip,
   TooltipContent,
   TooltipProvider,
   TooltipTrigger,
 } from "@/components/ui/tooltip";
+import { toast } from "sonner";
 
 interface WalletDisplayProps {
   walletAddress: string | null;
@@ -20,7 +21,22 @@ const WalletDisplay: React.FC<WalletDisplayProps> = ({ walletAddress }) => {
   
   const copyToClipboard = () => {
     navigator.clipboard.writeText(walletAddress);
-    // Toast notification handled by Header component
+    toast.success("Address copied to clipboard");
+  };
+
+  const pasteFromClipboard = async () => {
+    try {
+      const text = await navigator.clipboard.readText();
+      // The component itself doesn't handle what to do with the pasted address.
+      // This will be handled by the parent component that uses WalletDisplay.
+      document.dispatchEvent(new CustomEvent('wallet-address-paste', {
+        detail: { address: text }
+      }));
+    } catch (error) {
+      toast.error("Failed to paste", {
+        description: "Could not access clipboard. Please paste manually."
+      });
+    }
   };
 
   const viewInExplorer = () => {
@@ -41,21 +57,41 @@ const WalletDisplay: React.FC<WalletDisplayProps> = ({ walletAddress }) => {
         </TooltipContent>
       </Tooltip>
       
-      <Tooltip>
-        <TooltipTrigger asChild>
-          <Button 
-            variant="outline" 
-            size="icon" 
-            className="h-7 w-7 rounded-full bg-transparent border border-blue-800/30" 
-            onClick={viewInExplorer}
-          >
-            <ExternalLink className="h-3.5 w-3.5 text-blue-400" />
-          </Button>
-        </TooltipTrigger>
-        <TooltipContent>
-          <p>View in Sui Explorer</p>
-        </TooltipContent>
-      </Tooltip>
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button 
+              variant="outline" 
+              size="icon" 
+              className="h-7 w-7 rounded-full bg-transparent border border-blue-800/30" 
+              onClick={pasteFromClipboard}
+            >
+              <ClipboardPaste className="h-3.5 w-3.5 text-blue-400" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>Paste from clipboard</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
+      
+      <TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger asChild>
+            <Button 
+              variant="outline" 
+              size="icon" 
+              className="h-7 w-7 rounded-full bg-transparent border border-blue-800/30" 
+              onClick={viewInExplorer}
+            >
+              <ExternalLink className="h-3.5 w-3.5 text-blue-400" />
+            </Button>
+          </TooltipTrigger>
+          <TooltipContent>
+            <p>View in Sui Explorer</p>
+          </TooltipContent>
+        </Tooltip>
+      </TooltipProvider>
     </div>
   );
 };
