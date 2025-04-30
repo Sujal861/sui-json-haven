@@ -1,11 +1,11 @@
 
 import { useState } from "react";
 import { useToast } from "@/hooks/use-toast";
-import { toast } from "@/components/ui/sonner";
+import { toast } from "sonner";
+import { useWallet } from "@/providers/WalletProvider";
+import { SuiClient } from '@mysten/sui.js/client';
 
-// Placeholder for Sui SDK functionality
-// In a real implementation, this would use @mysten/sui.js
-
+// Define the document interface
 export interface Document {
   id: string;
   key: string;
@@ -13,6 +13,7 @@ export interface Document {
   lastModified: string;
 }
 
+// Define the store interface
 export interface Store {
   id: string;
   name: string;
@@ -21,73 +22,18 @@ export interface Store {
 }
 
 export const useChainData = () => {
-  const [isConnected, setIsConnected] = useState(false);
+  const { isConnected, walletAddress, connectWallet, disconnectWallet } = useWallet();
   const [isLoading, setIsLoading] = useState(false);
   const [store, setStore] = useState<Store | null>(null);
   const [documents, setDocuments] = useState<Document[]>([]);
-  const [walletAddress, setWalletAddress] = useState<string | null>(null);
   const { toast: uiToast } = useToast();
+  
+  // Initialize Sui client
+  const suiClient = new SuiClient({
+    url: 'https://fullnode.testnet.sui.io:443'
+  });
 
-  // Connect wallet - enhanced simulation
-  const connectWallet = async () => {
-    setIsLoading(true);
-    try {
-      // Simulating wallet connection with a delay
-      await new Promise(resolve => setTimeout(resolve, 1500));
-      
-      const address = "0x" + Math.random().toString(36).substring(2, 15);
-      setWalletAddress(address);
-      setIsConnected(true);
-      
-      // Show toast with multiple options
-      toast.success("Wallet connected", {
-        description: `Connected to address ${address.slice(0, 6)}...${address.slice(-4)}`,
-        action: {
-          label: "View",
-          onClick: () => console.log("View wallet clicked")
-        },
-      });
-      
-      // Simulate getting store data after connection
-      await new Promise(resolve => setTimeout(resolve, 500));
-      const newStore = {
-        id: "store-" + Math.random().toString(36).substring(2, 9),
-        name: "My Document Store",
-        owner: address,
-        createdAt: new Date().toISOString(),
-      };
-      setStore(newStore);
-      
-      return address;
-    } catch (error) {
-      toast.error("Connection failed", {
-        description: "Failed to connect wallet. Please try again."
-      });
-      return null;
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
-  // Disconnect wallet with animation
-  const disconnectWallet = () => {
-    setIsLoading(true);
-    
-    // Add a small delay to simulate disconnection
-    setTimeout(() => {
-      setIsConnected(false);
-      setWalletAddress(null);
-      setStore(null);
-      setDocuments([]);
-      setIsLoading(false);
-      
-      toast.info("Wallet disconnected", {
-        description: "You have been safely logged out"
-      });
-    }, 800);
-  };
-
-  // Create store - enhanced simulation
+  // Create store with properly connected wallet
   const createStore = async (name: string) => {
     if (!isConnected) {
       toast.error("Wallet not connected", {
@@ -103,7 +49,8 @@ export const useChainData = () => {
         description: "Transaction pending"
       });
       
-      // Simulating blockchain transaction with delay
+      // In a real implementation, this would interact with the Sui blockchain
+      // For now we'll simulate the transaction with a delay
       await new Promise(resolve => setTimeout(resolve, 2000));
       
       const newStore = {
@@ -250,6 +197,7 @@ export const useChainData = () => {
     createStore,
     addDocument,
     updateDocument,
-    deleteDocument
+    deleteDocument,
+    suiClient
   };
 };
