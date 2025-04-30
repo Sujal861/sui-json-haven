@@ -10,6 +10,7 @@ import { exampleDocuments } from '@/data/examples';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { CheckCircle2 } from 'lucide-react';
+import { collaborationService } from '@/services/collaborationService';
 
 interface Document {
   id: string;
@@ -82,6 +83,9 @@ const Index = () => {
   const handleDeleteDocument = () => {
     if (!selectedDocument) return;
     
+    // Leave collaboration room if currently collaborating
+    collaborationService.leaveRoom();
+    
     const updatedDocuments = documents.filter(doc => doc.id !== selectedDocument.id);
     setDocuments(updatedDocuments);
     setSelectedDocument(null);
@@ -91,7 +95,35 @@ const Index = () => {
     });
   };
 
+  const handleImportDocument = ({ key, content }: { key: string, content: string }) => {
+    if (!selectedDocument) return;
+    
+    // Update the current document with imported content
+    const updatedDoc = {
+      ...selectedDocument,
+      content,
+      lastModified: new Date().toISOString()
+    };
+    
+    setSelectedDocument(updatedDoc);
+    
+    const updatedDocuments = documents.map(doc =>
+      doc.id === selectedDocument.id ? updatedDoc : doc
+    );
+    
+    setDocuments(updatedDocuments);
+    toast({
+      title: "Success",
+      description: "Document imported successfully",
+    });
+  };
+
   const selectDocument = (document: Document) => {
+    // Leave current collaboration room if changing documents
+    if (selectedDocument && selectedDocument.id !== document.id) {
+      collaborationService.leaveRoom();
+    }
+    
     setSelectedDocument(document);
   };
 
@@ -130,6 +162,14 @@ const Index = () => {
             <div className="space-y-6">
               <h2 className="text-2xl font-semibold text-white text-center">Features</h2>
               <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                <FeatureCard
+                  title="Collaborative Editing"
+                  description="Work together with team members in real-time to edit and manage JSON documents."
+                />
+                <FeatureCard
+                  title="Export & Import"
+                  description="Export documents as JSON, YAML, CSV, or text files. Import documents from various formats."
+                />
                 <FeatureCard
                   title="JSON Document Management"
                   description="Create, edit, and manage JSON documents with custom keys and names. Delete documents when no longer needed."
@@ -175,12 +215,14 @@ const Index = () => {
                     document={selectedDocument}
                     onUpdate={handleUpdateDocument}
                     onDelete={handleDeleteDocument}
+                    onImport={handleImportDocument}
                   />
                   <JsonEditor
                     value={selectedDocument.content}
                     onChange={(content) =>
                       setSelectedDocument({ ...selectedDocument, content })
                     }
+                    documentId={selectedDocument.id}
                   />
                 </>
               )}

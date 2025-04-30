@@ -1,18 +1,66 @@
-import { useState, useEffect } from "react";
+
+import { useState, useEffect, useRef } from "react";
 import { Card, CardContent } from "@/components/ui/card";
-import { AlertCircle, Check } from "lucide-react";
+import { AlertCircle, Check, Users } from "lucide-react";
+import { collaborationService, Participant } from "@/services/collaborationService";
+import { Button } from "@/components/ui/button";
+import { toast } from "sonner";
 
 interface JsonEditorProps {
   value: string;
   onChange: (value: string) => void;
   readOnly?: boolean;
+  documentId?: string; // ID for collaborative editing
 }
 
-const JsonEditor = ({ value, onChange, readOnly = false }: JsonEditorProps) => {
+const JsonEditor = ({ value, onChange, readOnly = false, documentId }: JsonEditorProps) => {
   const [formattedValue, setFormattedValue] = useState(value);
   const [error, setError] = useState<string | null>(null);
   const [isValid, setIsValid] = useState<boolean>(true);
-
+  const [participants, setParticipants] = useState<Participant[]>([]);
+  const [isCollaborating, setIsCollaborating] = useState(false);
+  const textAreaRef = useRef<HTMLTextAreaElement>(null);
+  
+  // Initialize collaborative editing when documentId changes
+  useEffect(() => {
+    if (!documentId) return;
+    
+    collaborationService.setParticipantsChangeListener((newParticipants) => {
+      setParticipants(newParticipants);
+    });
+    
+    collaborationService.setDocumentChangeListener((newContent) => {
+      if (newContent !== formattedValue) {
+        setFormattedValue(newContent);
+        onChange(newContent);
+      }
+    });
+    
+    return () => {
+      collaborationService.setParticipantsChangeListener(null);
+      collaborationService.setDocumentChangeListener(null);
+    };
+  }, [documentId]);
+  
+  const toggleCollaboration = async () => {
+    if (isCollaborating) {
+      collaborationService.leaveRoom();
+      setIsCollaborating(false);
+      setParticipants([]);
+    } else {
+      if (documentId) {
+        const success = await collaborationService.joinRoom(documentId, formattedValue);
+        if (success) {
+          setIsCollaborating(true);
+        }
+      } else {
+        toast.error("Cannot start collaboration", { 
+          description: "Document must be saved first" 
+        });
+      }
+    }
+  };
+  
   useEffect(() => {
     try {
       // If empty, provide default template
@@ -45,6 +93,10 @@ const JsonEditor = ({ value, onChange, readOnly = false }: JsonEditorProps) => {
     const newValue = e.target.value;
     setFormattedValue(newValue);
     onChange(newValue);
+    
+    if (isCollaborating) {
+      collaborationService.updateDocument(newValue);
+    }
   };
 
   const formatJson = (json: string): JSX.Element => {
@@ -117,8 +169,27 @@ const JsonEditor = ({ value, onChange, readOnly = false }: JsonEditorProps) => {
               </div>
             )}
           </div>
-          <div className="text-xs text-gray-500">
-            {formattedValue ? JSON.stringify(formattedValue).length : 0} bytes
+          <div className="flex items-center space-x-4">
+            <div className="text-xs text-gray-500">
+              {formattedValue ? JSON.stringify(formattedValue).length : 0} bytes
+            </div>
+            
+            {documentId && (
+              <Button
+                variant="ghost"
+                size="sm"
+                className={`flex items-center space-x-1 ${isCollaborating ? 'text-blue-400' : 'text-gray-400'}`}
+                onClick={toggleCollaboration}
+              >
+                <Users size={16} />
+                <span className="text-xs">
+                  {isCollaborating 
+                    ? `${participants.length} ${participants.length === 1 ? 'user' : 'users'}`
+                    : 'Collaborate'
+                  }
+                </span>
+              </Button>
+            )}
           </div>
         </div>
         
@@ -131,8 +202,29 @@ const JsonEditor = ({ value, onChange, readOnly = false }: JsonEditorProps) => {
           </div>
         )}
         
+        {isCollaborating && participants.length > 0 && (
+          <div className="flex items-center space-x-2 p-2 border-b border-gray-800 bg-blue-900/10">
+            {participants.map(participant => (
+              <div 
+                key={participant.id} 
+                className="flex items-center" 
+                title={participant.name}
+              >
+                <div 
+                  className="w-3 h-3 rounded-full mr-1" 
+                  style={{ backgroundColor: participant.color }}
+                />
+                {participant.id === collaborationService.getCurrentUserId() && (
+                  <span className="text-xs text-gray-400">(You)</span>
+                )}
+              </div>
+            ))}
+          </div>
+        )}
+        
         {!readOnly ? (
           <textarea
+            ref={textAreaRef}
             value={formattedValue}
             onChange={handleChange}
             className="w-full h-[calc(100%-40px)] p-4 font-mono text-sm resize-none bg-transparent focus:outline-none"
