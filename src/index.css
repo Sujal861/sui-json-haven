@@ -45,6 +45,24 @@
   body {
     @apply bg-gradient-to-br from-[#0A0B0E] to-[#141619] text-foreground antialiased min-h-screen;
   }
+  
+  /* Custom scrollbar for webkit browsers */
+  ::-webkit-scrollbar {
+    width: 8px;
+    height: 8px;
+  }
+  
+  ::-webkit-scrollbar-track {
+    @apply bg-transparent;
+  }
+  
+  ::-webkit-scrollbar-thumb {
+    @apply bg-gray-700 rounded-full;
+  }
+  
+  ::-webkit-scrollbar-thumb:hover {
+    @apply bg-gray-600;
+  }
 }
 
 @layer components {
@@ -98,5 +116,73 @@
   
   .transaction-error {
     @apply text-red-400;
+  }
+  
+  /* Advanced Glassmorphism */
+  .glassmorphism-deep {
+    @apply bg-black/40 backdrop-blur-2xl border border-white/10 rounded-xl shadow-[0_8px_32px_rgba(0,0,0,0.4)] shadow-blue-900/10;
+  }
+  
+  /* Card with glow effect */
+  .glow-card {
+    @apply relative before:absolute before:inset-0 before:rounded-xl before:p-0.5 before:bg-gradient-to-r before:from-blue-500 before:to-indigo-500 before:opacity-30 before:blur-sm;
+  }
+  
+  /* Hover animations */
+  .hover-scale {
+    @apply transition-all duration-200 ease-out hover:scale-[1.02];
+  }
+  
+  /* Utility classes for scrollbars */
+  .scrollbar-thin {
+    scrollbar-width: thin;
+  }
+  
+  .scrollbar-thumb-gray-800 {
+    scrollbar-color: #1f2937 transparent;
+  }
+  
+  /* Document card */
+  .document-card {
+    @apply bg-black/40 border border-white/10 rounded-lg p-4 transition-all duration-200 hover:bg-black/50 hover:border-blue-500/30;
+  }
+}
+
+@layer utilities {
+  /* Enhanced animation utilities */
+  @keyframes glow {
+    0%, 100% { box-shadow: 0 0 10px rgba(59, 130, 246, 0.5), 0 0 20px rgba(99, 102, 241, 0.3); }
+    50% { box-shadow: 0 0 15px rgba(59, 130, 246, 0.7), 0 0 30px rgba(99, 102, 241, 0.5); }
+  }
+  
+  @keyframes fade-in {
+    from { opacity: 0; transform: translateY(10px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+  
+  @keyframes slide-in {
+    from { transform: translateX(-20px); opacity: 0; }
+    to { transform: translateX(0); opacity: 1; }
+  }
+  
+  @keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.5; }
+  }
+  
+  .animate-glow {
+    animation: glow 2s ease-in-out infinite;
+  }
+  
+  .animate-fade-in {
+    animation: fade-in 0.3s ease-out;
+  }
+  
+  .animate-slide-in {
+    animation: slide-in 0.3s ease-out;
+  }
+  
+  .animate-pulse {
+    animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
   }
 }

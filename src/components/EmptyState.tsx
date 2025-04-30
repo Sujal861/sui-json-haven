@@ -1,5 +1,6 @@
+
 import { Button } from "@/components/ui/button";
-import { FileText } from "lucide-react";
+import { FileJson, Plus } from "lucide-react";
 
 interface EmptyStateProps {
   onCreateStore: () => void;
@@ -8,19 +9,23 @@ interface EmptyStateProps {
 const EmptyState = ({ onCreateStore }: EmptyStateProps) => {
   return (
     <div className="flex-1 flex items-center justify-center">
-      <div className="text-center p-8 animate-fade-in">
+      <div className="text-center p-8 animate-fade-in glassmorphism">
         <div className="flex flex-col items-center">
-          <FileText className="w-16 h-16 text-blue-400 mb-4" />
-          <h3 className="text-xl font-semibold mb-2">No Documents Yet</h3>
+          <div className="bg-blue-500/20 p-4 rounded-full mb-4">
+            <FileJson className="w-12 h-12 text-blue-400" />
+          </div>
+          <h3 className="text-xl font-semibold mb-3 bg-gradient-to-r from-white to-gray-300 bg-clip-text text-transparent">
+            No Documents Yet
+          </h3>
           <p className="text-gray-400 max-w-md mb-6">
-            Create your first document to get started with JSON Haven
+            Create your first document to get started with ChainData storage
           </p>
           
           <Button 
             onClick={onCreateStore}
-            className="bg-blue-500 hover:bg-blue-600"
+            className="bg-gradient-to-r from-blue-500 to-indigo-500 hover:from-blue-600 hover:to-indigo-600 shadow-lg shadow-blue-900/20"
           >
-            Create Document
+            <Plus className="mr-2 h-4 w-4" /> Create Document
           </Button>
         </div>
       </div>

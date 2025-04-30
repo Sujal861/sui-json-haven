@@ -1,5 +1,6 @@
 import { useState, useEffect } from "react";
 import { Card, CardContent } from "@/components/ui/card";
+import { AlertCircle, Check } from "lucide-react";
 
 interface JsonEditorProps {
   value: string;
@@ -10,6 +11,7 @@ interface JsonEditorProps {
 const JsonEditor = ({ value, onChange, readOnly = false }: JsonEditorProps) => {
   const [formattedValue, setFormattedValue] = useState(value);
   const [error, setError] = useState<string | null>(null);
+  const [isValid, setIsValid] = useState<boolean>(true);
 
   useEffect(() => {
     try {
@@ -17,6 +19,7 @@ const JsonEditor = ({ value, onChange, readOnly = false }: JsonEditorProps) => {
       if (!value || !value.trim()) {
         setFormattedValue('{\n  \n}');
         setError(null);
+        setIsValid(true);
         return;
       }
       
@@ -25,12 +28,14 @@ const JsonEditor = ({ value, onChange, readOnly = false }: JsonEditorProps) => {
       const formatted = JSON.stringify(parsed, null, 2);
       setFormattedValue(formatted);
       setError(null);
+      setIsValid(true);
     } catch (e) {
       if (e instanceof Error) {
         setError(e.message);
       } else {
         setError("Invalid JSON");
       }
+      setIsValid(false);
       // Keep the current value even if it's invalid
       setFormattedValue(value);
     }
@@ -43,55 +48,51 @@ const JsonEditor = ({ value, onChange, readOnly = false }: JsonEditorProps) => {
   };
 
   const formatJson = (json: string): JSX.Element => {
-    // For a simple highlighting approach since this is a prototype
-    // In a real app, we would use a proper syntax highlighting library
     try {
       // If empty, provide default template
       if (!json || !json.trim()) {
-        return <div className="font-mono whitespace-pre">{'{'}\n  \n{'}'}</div>;
+        return <div className="font-mono whitespace-pre">{'{\n  \n}'}</div>;
       }
       
       const parsed = JSON.parse(json);
       const formatted = JSON.stringify(parsed, null, 2);
       
-      // Simple regex-based highlighting
+      // Enhanced syntax highlighting with nested object support
+      const formatLine = (line: string, index: number): JSX.Element => {
+        // Match key and value parts
+        const keyMatch = line.match(/^(\s*)(".*?")(:)/);
+        
+        if (!keyMatch) return <div key={index}>{line}</div>;
+        
+        const [, spaces, key, colon] = keyMatch;
+        const keySpan = <span className="json-key">{key}</span>;
+        
+        // Extract the value part
+        const afterColon = line.substring(line.indexOf(':') + 1);
+        
+        let valueSpan;
+        if (afterColon.trim().match(/^".*?"(,?)$/)) {
+          valueSpan = <span className="json-string">{afterColon}</span>;
+        } else if (afterColon.trim().match(/^(true|false)(,?)$/)) {
+          valueSpan = <span className="json-boolean">{afterColon}</span>;
+        } else if (afterColon.trim().match(/^null(,?)$/)) {
+          valueSpan = <span className="json-null">{afterColon}</span>;
+        } else if (afterColon.trim().match(/^-?\d+(\.\d+)?(e[+-]?\d+)?(,?)$/i)) {
+          valueSpan = <span className="json-number">{afterColon}</span>;
+        } else {
+          valueSpan = afterColon;
+        }
+        
+        return (
+          <div key={index} className="hover:bg-white/5">
+            {spaces}{keySpan}{colon} {valueSpan}
+          </div>
+        );
+      };
+      
       return (
-        <div className="font-mono whitespace-pre">
-          {formatted.split('\n').map((line, i) => {
-            // Very basic highlighting
-            const keyMatch = line.match(/^(\s*)(".*?"):/);
-            const valueMatch = line.match(/:\s*(.*?)$/);
-            
-            if (!keyMatch) return <div key={i}>{line}</div>;
-            
-            const [, spaces, key] = keyMatch;
-            const keySpan = <span className="json-key">{key}</span>;
-            
-            if (!valueMatch) return (
-              <div key={i}>{spaces}{keySpan}:</div>
-            );
-            
-            const [, value] = valueMatch;
-            
-            let valueSpan;
-            if (value.match(/^".*?"(,?)$/)) {
-              valueSpan = <span className="json-string">{value}</span>;
-            } else if (value.match(/^(true|false)(,?)$/)) {
-              valueSpan = <span className="json-boolean">{value}</span>;
-            } else if (value.match(/^null(,?)$/)) {
-              valueSpan = <span className="json-null">{value}</span>;
-            } else if (value.match(/^-?\d+(\.\d+)?(e[+-]?\d+)?(,?)$/i)) {
-              valueSpan = <span className="json-number">{value}</span>;
-            } else {
-              valueSpan = value;
-            }
-            
-            return (
-              <div key={i}>
-                {spaces}{keySpan}: {valueSpan}
-              </div>
-            );
-          })}
+        <div className="font-mono whitespace-pre text-sm">
+          {formatted.split('\n').map((line, i) => formatLine(line, i))}
         </div>
       );
     } catch {
@@ -102,9 +103,31 @@ const JsonEditor = ({ value, onChange, readOnly = false }: JsonEditorProps) => {
   return (
     <Card className="h-full editor-container">
       <CardContent className="p-0 h-full">
+        <div className="flex justify-between items-center px-4 py-2 border-b border-gray-800">
+          <div className="flex items-center">
+            {isValid ? (
+              <div className="flex items-center text-green-400">
+                <Check size={16} className="mr-2" />
+                <span className="text-xs">Valid JSON</span>
+              </div>
+            ) : (
+              <div className="flex items-center text-red-400">
+                <AlertCircle size={16} className="mr-2" />
+                <span className="text-xs">Invalid JSON</span>
+              </div>
+            )}
+          </div>
+          <div className="text-xs text-gray-500">
+            {formattedValue ? JSON.stringify(formattedValue).length : 0} bytes
+          </div>
+        </div>
+        
         {error && (
           <div className="bg-red-900/20 text-red-400 text-sm p-2 border-b border-red-900">
-            {error}
+            <div className="flex items-center">
+              <AlertCircle size={14} className="mr-2" />
+              <span>{error}</span>
+            </div>
           </div>
         )}
         
@@ -112,12 +135,13 @@ const JsonEditor = ({ value, onChange, readOnly = false }: JsonEditorProps) => {
           <textarea
             value={formattedValue}
             onChange={handleChange}
-            className="w-full h-full p-4 font-mono text-sm resize-none bg-transparent focus:outline-none"
+            className="w-full h-[calc(100%-40px)] p-4 font-mono text-sm resize-none bg-transparent focus:outline-none"
             disabled={readOnly}
             placeholder="Enter JSON here..."
+            spellCheck="false"
           />
         ) : (
-          <div className="w-full h-full overflow-auto p-4 text-sm opacity-70">
+          <div className="w-full h-[calc(100%-40px)] overflow-auto p-4 text-sm opacity-70">
             {formatJson(formattedValue)}
           </div>
         )}
